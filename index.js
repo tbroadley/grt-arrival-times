@@ -13,6 +13,7 @@ const STOP_IDS = ['2513', '2523', '2512', '2524', '1171', '3623', '3619', '3620'
 const TIME_HORIZON = 30;
 const CRITICAL_TIME_HORIZON = 5;
 const STOPS_PER_ROW = 4;
+const REFRESH_PERIOD = 1;
 
 function getStartOfDay() {
   const result = moment().hour(0).minute(0).second(0);
@@ -131,7 +132,7 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.interval = setInterval(() => this.updateArrivalTimes(), 60000);
+    this.interval = setInterval(() => this.updateArrivalTimes(), REFRESH_PERIOD * 60 * 1000);
     this.updateArrivalTimes();
   }
 
