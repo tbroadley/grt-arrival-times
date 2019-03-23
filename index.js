@@ -33,12 +33,27 @@ function processData(stops, trips, stopTimes, stopTimeUpdates) {
       });
     });
 
-    const now = moment();
-
     const filteredStopTimes = stopTimesForStop.filter(s => {
-      // TODO this sucks
-      const at = moment(now.format('YYYY-MM-DD ') + s.arrivalTime);
-      return at > now && at <= now.clone().add(30, 'minutes');
+      const [hourString, minuteString, secondString] = s.arrivalTime.split(':');
+      if (!hourString || !minuteString || !secondString) return false;
+
+      const hour = _.toNumber(hourString);
+      if (!_.isFinite(hour)) return false;
+
+      const minute = _.toNumber(minuteString);
+      if (!_.isFinite(minute)) return false;
+
+      const second = _.toNumber(secondString);
+      if (!_.isFinite(second)) return false;
+
+      const at = moment().hour(0).minute(0).second(0).add(hour, 'hours').add(minute, 'minutes');
+
+      // After midnight, subtract 24 hours, since GRT returns 25:00:00 for 1 am
+      if (moment().hour() < 4) {
+        at.subtract(24, 'hours')
+      }
+
+      return at > moment() && at <= moment().clone().add(30, 'minutes');
     });
     const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
 
