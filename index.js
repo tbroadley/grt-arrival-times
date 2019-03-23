@@ -1,3 +1,4 @@
+const fs = require('fs');
 const gtfs = require('gtfs-stream');
 const _ = require('lodash');
 const moment = require('moment');
@@ -52,7 +53,9 @@ function processData() {
   });
 }
 
-request.get('https://www.regionofwaterloo.ca/opendatadownloads/GRT_GTFS.zip')
+// TODO change back to request
+// request.get('https://www.regionofwaterloo.ca/opendatadownloads/GRT_GTFS.zip')
+fs.createReadStream('GRT_GTFS.zip')
   .pipe(gtfs())
   .on('data', (entity) => {
     switch (entity.type) {
@@ -68,7 +71,9 @@ request.get('https://www.regionofwaterloo.ca/opendatadownloads/GRT_GTFS.zip')
     }
   })
   .on('close', () => {
-    request.get('http://192.237.29.212:8080/gtfsrealtime/TripUpdates')
+    // TODO change back to request
+    // request.get('http://192.237.29.212:8080/gtfsrealtime/TripUpdates')
+    fs.createReadStream('TripUpdates')
       .pipe(gtfs.rt())
       .on('data', (entity) => {
         stopTimeUpdates.push(entity);
