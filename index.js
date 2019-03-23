@@ -17,6 +17,22 @@ function getStartOfDay() {
   return result;
 }
 
+function parseArrivalTime(arrivalTime) {
+  const [hourString, minuteString, secondString] = arrivalTime.split(':');
+  if (!hourString || !minuteString || !secondString) return false;
+
+  const hour = _.toNumber(hourString);
+  if (!_.isFinite(hour)) return false;
+
+  const minute = _.toNumber(minuteString);
+  if (!_.isFinite(minute)) return false;
+
+  const second = _.toNumber(secondString);
+  if (!_.isFinite(second)) return false;
+
+  return getStartOfDay().add(hour, 'hours').add(minute, 'minutes');
+}
+
 function processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates) {
   return STOP_IDS.map(stop_id => {
     const stop = _.find(stops, { stop_id });
@@ -51,19 +67,7 @@ function processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates) {
     });
 
     const filteredStopTimes = stopTimesForStop.filter(s => {
-      const [hourString, minuteString, secondString] = s.arrivalTime.split(':');
-      if (!hourString || !minuteString || !secondString) return false;
-
-      const hour = _.toNumber(hourString);
-      if (!_.isFinite(hour)) return false;
-
-      const minute = _.toNumber(minuteString);
-      if (!_.isFinite(minute)) return false;
-
-      const second = _.toNumber(secondString);
-      if (!_.isFinite(second)) return false;
-
-      const at = getStartOfDay().add(hour, 'hours').add(minute, 'minutes');
+      const at = parseArrivalTime(s.arrivalTime);
       return at > moment() && at <= moment().clone().add(30, 'minutes');
     });
     const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
@@ -113,7 +117,15 @@ function updateArrivalTimes() {
           const data = processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates);
           data.forEach(({ stopName, orderedStopTimes }) => {
             console.log(stopName);
-            console.log(orderedStopTimes);
+            console.log();
+            orderedStopTimes.forEach(({ routeNumber, routeDescription, arrivalTime }) => {
+              console.log(`${routeNumber}: ${routeDescription}`);
+
+              const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(moment(), 'seconds') / 60);
+              console.log(`${timeToArrival} minutes`);
+
+              console.log();
+            });
           });
         });
     });
