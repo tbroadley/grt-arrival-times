@@ -11,8 +11,11 @@
   "dependencies": {
     "gtfs-realtime-bindings": "0.0.4",
     "gtfs-stream": "^1.0.4",
+    "ink": "^2.0.6",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
+    "react": "^16.8.5",
+    "react-hyperscript": "^3.2.0",
     "request": "^2.88.0"
   }
 }
