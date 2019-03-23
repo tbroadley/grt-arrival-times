@@ -7,7 +7,7 @@ const React = require('react');
 const h = require('react-hyperscript');
 const request = require('request');
 
-const STOP_IDS = ['2513', '2523'];
+const STOP_IDS = ['2513', '2523', '2512', '2524', '1171', '3623', '3619', '3620'];
 
 function getStartOfDay() {
   const result = moment().hour(0).minute(0).second(0);
