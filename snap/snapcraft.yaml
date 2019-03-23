@@ -9,10 +9,10 @@ confinement: devmode # use 'strict' once you have the right plugs and slots
 
 architectures:
   - build-on: amd64
-    run-on: [amd64, armhf]
+    run-on: armhf
 
 apps:
-  grt-arrival-times:
+  app:
     command: bin/grt-arrival-times
 
 parts:

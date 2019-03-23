@@ -86,3 +86,4 @@ typings/
 TripUpdates
 
 *.snap
+*.pyc

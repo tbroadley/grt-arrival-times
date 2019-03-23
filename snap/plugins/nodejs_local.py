@@ -184,6 +184,20 @@ class NodePlugin(snapcraft.BasePlugin):
             for name in installed_node_packages
         ]
 
+        self._nodejs_release_uri = get_nodejs_release(
+            self.options.nodejs_version, 'armhf'
+        )
+        self._nodejs_tar_handle = None
+        print('Downloading Node for armhf')
+        # self._nodejs_tar.download()
+        print('Provisioning Node for armhf')
+        self._nodejs_tar.provision(self._npm_dir, clean_target=False, keep_tarball=True)
+        print('Copying Node for armhf')
+        link_or_copy(
+            os.path.join(self._npm_dir, "bin", "node"),
+            os.path.join(self.installdir, "bin", "node"),
+        )
+
     def _install(self, rootdir):
         self._nodejs_tar.provision(self._npm_dir, clean_target=False, keep_tarball=True)
         if self.options.nodejs_package_manager == "yarn":
