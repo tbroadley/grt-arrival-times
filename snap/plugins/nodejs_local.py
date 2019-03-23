@@ -215,7 +215,7 @@ class NodePlugin(snapcraft.BasePlugin):
 
         flags = []
         if rootdir == self.builddir:
-            flags = ["--offline", "--prod"]
+            flags = ["--prod"]
 
         self.run(cmd + ["install"] + flags, rootdir)
 

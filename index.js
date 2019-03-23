@@ -3,7 +3,7 @@ const fs = require('fs');
 const gtfs = require('gtfs-stream');
 const { render, Box, Color } = require('ink');
 const _ = require('lodash');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const React = require('react');
 const h = require('react-hyperscript');
 const request = require('request');
@@ -15,11 +15,15 @@ const CRITICAL_TIME_HORIZON = 5;
 const STOPS_PER_ROW = 4;
 const REFRESH_PERIOD = 1;
 
+function getTime(time) {
+  return moment.utc(time).tz('America/Toronto');
+}
+
 function getStartOfDay() {
-  const result = moment().hour(0).minute(0).second(0).millisecond(0);
+  const result = getTime().hour(0).minute(0).second(0).millisecond(0);
 
   // After midnight, subtract 24 hours, since GRT returns 25:00:00 for 1 am
-  if (moment().hour() < 4) {
+  if (getTime().hour() < 4) {
     result.subtract(24, 'hours')
   }
 
@@ -79,14 +83,14 @@ class App extends React.Component {
         const stopTimeUpdatesForThisStop = _.filter(update.trip_update.stop_time_update, { stop_id });
         stopTimeUpdatesForThisStop.forEach(u => {
           if (u.arrival && u.arrival.time && u.arrival.time.low) {
-            stopTime.arrivalTime = moment(u.arrival.time.low * 1000).format('HH:mm:ss');
+            stopTime.arrivalTime = getTime(u.arrival.time.low * 1000).format('HH:mm:ss');
           }
         });
       });
 
       const filteredStopTimes = stopTimesForStop.filter(s => {
         const at = parseArrivalTime(s.arrivalTime);
-        return at > moment() && at <= moment().add(TIME_HORIZON, 'minutes');
+        return at > getTime() && at <= getTime().add(TIME_HORIZON, 'minutes');
       });
       const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
 
@@ -98,7 +102,7 @@ class App extends React.Component {
   }
 
   updateArrivalTimes() {
-    const start = moment();
+    const start = getTime();
 
     const stops = [];
     const trips = [];
@@ -106,9 +110,12 @@ class App extends React.Component {
     const calendarDates = [];
     const stopTimeUpdates = [];
 
+    let entityCount = 0;
+
     request.get('https://www.regionofwaterloo.ca/opendatadownloads/GRT_GTFS.zip')
       .pipe(gtfs())
       .on('data', (entity) => {
+        entityCount += 1;
         switch (entity.type) {
           case 'stop':
             stops.push(entity.data);
@@ -132,7 +139,7 @@ class App extends React.Component {
           .on('finish', () => {
             const data = this.processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates);
             this.setState({ data });
-            console.error(`Took ${moment().diff(start, 'seconds')} seconds to update`);
+            console.error(`Took ${getTime().diff(start, 'seconds')} seconds to update`);
           });
       });
   }
@@ -140,7 +147,7 @@ class App extends React.Component {
   componentDidMount() {
     const update = () => {
       this.updateArrivalTimes();
-      this.setState({ currentTime: moment().format('llll') });
+      this.setState({ currentTime: getTime().format('llll') });
     };
 
     update();
@@ -166,7 +173,7 @@ class App extends React.Component {
             ...(orderedStopTimes.length === 0 ?
               [h(Color, { gray: true }, `No buses in the next ${TIME_HORIZON} minutes`)] :
               orderedStopTimes.map(({ tripId, routeNumber, routeDescription, arrivalTime }) => {
-                const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(moment(), 'seconds') / 60);
+                const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(getTime(), 'seconds') / 60);
                 return h(Box, { marginBottom: 1, flexDirection: 'column', key: tripId }, [
                   `${routeNumber}: ${routeDescription}`,
                   h(Color, { bgRed: timeToArrival <= CRITICAL_TIME_HORIZON },
