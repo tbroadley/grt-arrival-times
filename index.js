@@ -1,23 +1,23 @@
-var gtfs = require('gtfs-stream');
-var _ = require('lodash');
-var moment = require('moment');
-var request = require('request');
+const gtfs = require('gtfs-stream');
+const _ = require('lodash');
+const moment = require('moment');
+const request = require('request');
 
-var STOP_IDS = ['2513', '2523'];
+const STOP_IDS = ['2513', '2523'];
 
-var stops = [];
-var trips = [];
-var stopTimes = [];
-var stopTimeUpdates = [];
+const stops = [];
+const trips = [];
+const stopTimes = [];
+const stopTimeUpdates = [];
 
 // TODO filter out trips that aren't active / aren't running today - basically, what's the difference between trip 1733264 and 1731848
 
 function processData() {
   STOP_IDS.forEach(stop_id => {
-    var stop = _.find(stops, { stop_id });
+    const stop = _.find(stops, { stop_id });
 
-    var stopTimesForStop = _.filter(stopTimes, { stop_id }).map(({ trip_id, arrival_time }) => {
-      var trip = _.find(trips, { trip_id });
+    const stopTimesForStop = _.filter(stopTimes, { stop_id }).map(({ trip_id, arrival_time }) => {
+      const trip = _.find(trips, { trip_id });
       return {
         tripId: trip.trip_id,
         routeNumber: trip.route_id,
@@ -26,10 +26,10 @@ function processData() {
       };
     });
 
-    var stopTimeUpdatesForStop = _.filter(stopTimeUpdates, update => _.some(update.trip_update.stop_time_update, { stop_id }));
+    const stopTimeUpdatesForStop = _.filter(stopTimeUpdates, update => _.some(update.trip_update.stop_time_update, { stop_id }));
     stopTimeUpdatesForStop.forEach(update => {
-      var stopTime = _.find(stopTimesForStop, { tripId: update.trip_update.trip.trip_id });
-      var stopTimeUpdatesForThisStop = _.filter(update.trip_update.stop_time_update, { stop_id });
+      const stopTime = _.find(stopTimesForStop, { tripId: update.trip_update.trip.trip_id });
+      const stopTimeUpdatesForThisStop = _.filter(update.trip_update.stop_time_update, { stop_id });
       stopTimeUpdatesForThisStop.forEach(u => {
         if (u.arrival && u.arrival.time && u.arrival.time.low) {
           stopTime.arrivalTime = moment(u.arrival.time.low * 1000).format('HH:mm:ss');
@@ -39,11 +39,11 @@ function processData() {
 
     console.log(stop.stop_name);
 
-    var now = moment();
+    const now = moment();
 
     const filteredStopTimes = stopTimesForStop.filter(s => {
       // TODO this sucks
-      var at = moment(now.format('YYYY-MM-DD ') + s.arrivalTime);
+      const at = moment(now.format('YYYY-MM-DD ') + s.arrivalTime);
       return at > now && at <= now.clone().add(30, 'minutes');
     });
     const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
