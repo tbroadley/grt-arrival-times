@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const fs = require('fs');
 const gtfs = require('gtfs-stream');
 const { render, Box, Color } = require('ink');

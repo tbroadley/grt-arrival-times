@@ -84,3 +84,5 @@ typings/
 .dynamodb/
 
 TripUpdates
+
+*.snap
