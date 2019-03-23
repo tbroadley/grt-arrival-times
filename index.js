@@ -16,7 +16,7 @@ const STOPS_PER_ROW = 4;
 const REFRESH_PERIOD = 1;
 
 function getStartOfDay() {
-  const result = moment().hour(0).minute(0).second(0);
+  const result = moment().hour(0).minute(0).second(0).millisecond(0);
 
   // After midnight, subtract 24 hours, since GRT returns 25:00:00 for 1 am
   if (moment().hour() < 4) {
@@ -39,7 +39,10 @@ function parseArrivalTime(arrivalTime) {
   const second = _.toNumber(secondString);
   if (!_.isFinite(second)) return false;
 
-  return getStartOfDay().add(hour, 'hours').add(minute, 'minutes');
+  return getStartOfDay()
+    .add(hour, 'hours')
+    .add(minute, 'minutes')
+    .add(second, 'seconds');
 }
 
 class App extends React.Component {
