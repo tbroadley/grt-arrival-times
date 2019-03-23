@@ -95,6 +95,8 @@ class App extends React.Component {
   }
 
   updateArrivalTimes() {
+    const start = moment();
+
     const stops = [];
     const trips = [];
     const stopTimes = [];
@@ -127,6 +129,7 @@ class App extends React.Component {
           .on('finish', () => {
             const data = this.processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates);
             this.setState({ data });
+            console.error(`Took ${moment().diff(start, 'seconds')} seconds to update`);
           });
       });
   }
