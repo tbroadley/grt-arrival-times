@@ -9,6 +9,10 @@ const request = require('request');
 
 const STOP_IDS = ['2513', '2523', '2512', '2524', '1171', '3623', '3619', '3620'];
 
+const TIME_HORIZON = 30;
+const CRITICAL_TIME_HORIZON = 5;
+const STOPS_PER_ROW = 4;
+
 function getStartOfDay() {
   const result = moment().hour(0).minute(0).second(0);
 
@@ -77,7 +81,7 @@ class App extends React.Component {
 
       const filteredStopTimes = stopTimesForStop.filter(s => {
         const at = parseArrivalTime(s.arrivalTime);
-        return at > moment() && at <= moment().clone().add(30, 'minutes');
+        return at > moment() && at <= moment().clone().add(TIME_HORIZON, 'minutes');
       });
       const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
 
@@ -145,17 +149,17 @@ class App extends React.Component {
       width: process.stdout.columns,
       height: process.stdout.rows,
       flexDirection: 'column'
-    }, _.chunk(this.state.data, 4).map(chunk => (
+    }, _.chunk(this.state.data, STOPS_PER_ROW).map(chunk => (
       h(Box, { flexDirection: 'row', marginBottom: 3 }, chunk.map(({ stopName, orderedStopTimes }) => (
         h(Box, { flexDirection: 'column', flexGrow: 1, margin: 1 }, [
           h(Box, { marginBottom: 1 }, h(Color, { blue: true }, stopName)),
           ...(orderedStopTimes.length === 0 ?
-            [h(Color, { gray: true }, 'No buses in the next 30 minutes')] :
+            [h(Color, { gray: true }, `No buses in the next ${TIME_HORIZON} minutes`)] :
             orderedStopTimes.map(({ tripId, routeNumber, routeDescription, arrivalTime }) => {
               const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(moment(), 'seconds') / 60);
               return h(Box, { marginBottom: 1, flexDirection: 'column', key: tripId }, [
                 `${routeNumber}: ${routeDescription}`,
-                h(Color, { bgRed: timeToArrival <= 5 },
+                h(Color, { bgRed: timeToArrival <= CRITICAL_TIME_HORIZON },
                   timeToArrival === 0 ? '<1 min' : timeToArrival === 1 ? '1 min' : `${timeToArrival} mins`
                 )
               ]);
