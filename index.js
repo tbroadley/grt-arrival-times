@@ -45,7 +45,7 @@ function parseArrivalTime(arrivalTime) {
 class App extends React.Component {
   constructor() {
     super();
-    this.state = { data: [] };
+    this.state = { data: [], currentTime: 'Loading time...' };
   }
 
   processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates) {
@@ -135,8 +135,13 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.interval = setInterval(() => this.updateArrivalTimes(), REFRESH_PERIOD * 60 * 1000);
-    this.updateArrivalTimes();
+    const update = () => {
+      this.updateArrivalTimes();
+      this.setState({ currentTime: moment().format('llll') });
+    };
+
+    update();
+    this.interval = setInterval(update, REFRESH_PERIOD * 60 * 1000);
   }
 
   componentWillUnmount() {
@@ -150,25 +155,28 @@ class App extends React.Component {
       width: process.stdout.columns,
       height: process.stdout.rows,
       flexDirection: 'column'
-    }, _.chunk(this.state.data, STOPS_PER_ROW).map(chunk => (
-      h(Box, { flexDirection: 'row', marginBottom: 3 }, chunk.map(({ stopName, orderedStopTimes }) => (
-        h(Box, { flexDirection: 'column', flexGrow: 1, margin: 1 }, [
-          h(Box, { marginBottom: 1 }, h(Color, { blue: true }, stopName)),
-          ...(orderedStopTimes.length === 0 ?
-            [h(Color, { gray: true }, `No buses in the next ${TIME_HORIZON} minutes`)] :
-            orderedStopTimes.map(({ tripId, routeNumber, routeDescription, arrivalTime }) => {
-              const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(moment(), 'seconds') / 60);
-              return h(Box, { marginBottom: 1, flexDirection: 'column', key: tripId }, [
-                `${routeNumber}: ${routeDescription}`,
-                h(Color, { bgRed: timeToArrival <= CRITICAL_TIME_HORIZON },
-                  timeToArrival === 0 ? '<1 min' : timeToArrival === 1 ? '1 min' : `${timeToArrival} mins`
-                )
-              ]);
-            })
-          ),
-        ])
-      )))
-    )));
+    }, [
+      ..._.chunk(this.state.data, STOPS_PER_ROW).map(chunk => (
+        h(Box, { flexDirection: 'row', marginBottom: 3 }, chunk.map(({ stopName, orderedStopTimes }) => (
+          h(Box, { flexDirection: 'column', flexGrow: 1, margin: 1 }, [
+            h(Box, { marginBottom: 1 }, h(Color, { blue: true }, stopName)),
+            ...(orderedStopTimes.length === 0 ?
+              [h(Color, { gray: true }, `No buses in the next ${TIME_HORIZON} minutes`)] :
+              orderedStopTimes.map(({ tripId, routeNumber, routeDescription, arrivalTime }) => {
+                const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(moment(), 'seconds') / 60);
+                return h(Box, { marginBottom: 1, flexDirection: 'column', key: tripId }, [
+                  `${routeNumber}: ${routeDescription}`,
+                  h(Color, { bgRed: timeToArrival <= CRITICAL_TIME_HORIZON },
+                    timeToArrival === 0 ? '<1 min' : timeToArrival === 1 ? '1 min' : `${timeToArrival} mins`
+                  )
+                ]);
+              })
+            ),
+          ])
+        )))
+      )),
+      `${this.state.currentTime}`
+    ]);
   }
 }
 
