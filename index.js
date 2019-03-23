@@ -83,7 +83,7 @@ class App extends React.Component {
 
       const filteredStopTimes = stopTimesForStop.filter(s => {
         const at = parseArrivalTime(s.arrivalTime);
-        return at > moment() && at <= moment().clone().add(TIME_HORIZON, 'minutes');
+        return at > moment() && at <= moment().add(TIME_HORIZON, 'minutes');
       });
       const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
 
