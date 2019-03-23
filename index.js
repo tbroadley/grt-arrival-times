@@ -6,21 +6,38 @@ const request = require('request');
 
 const STOP_IDS = ['2513', '2523'];
 
-// TODO filter out trips that aren't active / aren't running today - basically, what's the difference between trip 1733264 and 1731848
+function getStartOfDay() {
+  const result = moment().hour(0).minute(0).second(0);
 
-function processData(stops, trips, stopTimes, stopTimeUpdates) {
+  // After midnight, subtract 24 hours, since GRT returns 25:00:00 for 1 am
+  if (moment().hour() < 4) {
+    result.subtract(24, 'hours')
+  }
+
+  return result;
+}
+
+function processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates) {
   return STOP_IDS.map(stop_id => {
     const stop = _.find(stops, { stop_id });
 
     const stopTimesForStop = _.filter(stopTimes, { stop_id }).map(({ trip_id, arrival_time }) => {
       const trip = _.find(trips, { trip_id });
+
+      const calendarDate = _.find(calendarDates, {
+        service_id: trip.service_id,
+        date: getStartOfDay().format('YYYYMMDD'),
+        exception_type: '1', // Service is running today
+      });
+      if (!calendarDate) return false;
+
       return {
         tripId: trip.trip_id,
         routeNumber: trip.route_id,
         routeDescription: trip.trip_headsign,
         arrivalTime: arrival_time,
       };
-    });
+    }).filter(s => s);
 
     const stopTimeUpdatesForStop = _.filter(stopTimeUpdates, update => _.some(update.trip_update.stop_time_update, { stop_id }));
     stopTimeUpdatesForStop.forEach(update => {
@@ -46,13 +63,7 @@ function processData(stops, trips, stopTimes, stopTimeUpdates) {
       const second = _.toNumber(secondString);
       if (!_.isFinite(second)) return false;
 
-      const at = moment().hour(0).minute(0).second(0).add(hour, 'hours').add(minute, 'minutes');
-
-      // After midnight, subtract 24 hours, since GRT returns 25:00:00 for 1 am
-      if (moment().hour() < 4) {
-        at.subtract(24, 'hours')
-      }
-
+      const at = getStartOfDay().add(hour, 'hours').add(minute, 'minutes');
       return at > moment() && at <= moment().clone().add(30, 'minutes');
     });
     const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
@@ -68,6 +79,7 @@ function updateArrivalTimes() {
   const stops = [];
   const trips = [];
   const stopTimes = [];
+  const calendarDates = [];
   const stopTimeUpdates = [];
 
   // TODO change back to request
@@ -85,6 +97,8 @@ function updateArrivalTimes() {
         case 'stop_time':
           stopTimes.push(entity.data);
           break;
+        case 'calendar_date':
+          calendarDates.push(entity.data);
       }
     })
     .on('close', () => {
@@ -96,7 +110,7 @@ function updateArrivalTimes() {
           stopTimeUpdates.push(entity);
         })
         .on('finish', () => {
-          const data = processData(stops, trips, stopTimes, stopTimeUpdates);
+          const data = processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates);
           data.forEach(({ stopName, orderedStopTimes }) => {
             console.log(stopName);
             console.log(orderedStopTimes);
