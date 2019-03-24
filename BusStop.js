@@ -5,6 +5,43 @@ const h = require("react-hyperscript");
 
 const { getTime, parseDepartureTime } = require("./lib");
 
+class StopTime extends React.Component {
+  render() {
+    const {
+      stopTime: { tripId, routeNumber, routeDescription, departureTime },
+      criticalTimeHorizon
+    } = this.props;
+
+    const timeToDeparture = _.floor(
+      parseDepartureTime(departureTime).diff(getTime(), "seconds") / 60
+    );
+    if (timeToDeparture < 0) return null;
+
+    return h(
+      Box,
+      {
+        marginBottom: 1,
+        flexDirection: "column",
+        key: tripId
+      },
+      [
+        `${routeNumber}: ${routeDescription}`,
+        h(
+          Color,
+          {
+            bgRed: timeToDeparture <= criticalTimeHorizon
+          },
+          timeToDeparture === 0
+            ? "<1 min"
+            : timeToDeparture === 1
+            ? "1 min"
+            : `${timeToDeparture} mins`
+        )
+      ]
+    );
+  }
+}
+
 class BusStop extends React.Component {
   render() {
     const {
@@ -23,36 +60,8 @@ class BusStop extends React.Component {
               `No buses in the next ${timeHorizon} minutes`
             )
           ]
-        : orderedStopTimes.map(
-            ({ tripId, routeNumber, routeDescription, departureTime }) => {
-              const timeToDeparture = _.floor(
-                parseDepartureTime(departureTime).diff(getTime(), "seconds") /
-                  60
-              );
-              if (timeToDeparture < 0) return null;
-              return h(
-                Box,
-                {
-                  marginBottom: 1,
-                  flexDirection: "column",
-                  key: tripId
-                },
-                [
-                  `${routeNumber}: ${routeDescription}`,
-                  h(
-                    Color,
-                    {
-                      bgRed: timeToDeparture <= criticalTimeHorizon
-                    },
-                    timeToDeparture === 0
-                      ? "<1 min"
-                      : timeToDeparture === 1
-                      ? "1 min"
-                      : `${timeToDeparture} mins`
-                  )
-                ]
-              );
-            }
+        : orderedStopTimes.map(stopTime =>
+            h(StopTime, { stopTime, criticalTimeHorizon })
           ))
     ]);
   }
