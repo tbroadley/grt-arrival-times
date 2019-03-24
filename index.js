@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const chalk = require('chalk');
 const fs = require('fs');
 const gtfs = require('gtfs-stream');
 const { render, Box, Color } = require('ink');
@@ -7,6 +8,7 @@ const moment = require('moment-timezone');
 const React = require('react');
 const h = require('react-hyperscript');
 const request = require('request');
+const tty = require('tty');
 
 const STOP_IDS = ['2513', '2523', '2512', '2524', '1171', '3623', '3619', '3620'];
 
@@ -161,9 +163,11 @@ class App extends React.Component {
   render() {
     if (this.state.data.length === 0) return 'Loading...';
 
+    const { width, height } = this.props;
+
     return h(Box, {
-      width: process.stdout.columns,
-      height: process.stdout.rows,
+      width,
+      height,
       flexDirection: 'column'
     }, [
       ..._.chunk(this.state.data, STOPS_PER_ROW).map(chunk => (
@@ -190,4 +194,12 @@ class App extends React.Component {
   }
 }
 
-render(h(App));
+if (process.env.GRT_TTY) {
+  chalk.enabled = true;
+  chalk.level = 2;
+}
+
+const outputTTY = process.env.GRT_TTY ? new tty.WriteStream(fs.openSync(process.env.GRT_TTY, 'r+')) : process.stdout;
+const [width, height] = outputTTY.getWindowSize();
+
+render(h(App, { width, height }), outputTTY);
