@@ -113,8 +113,6 @@ function processData(
 }
 
 function updateDepartureTimes(timeHorizon, cb) {
-  const start = getTime();
-
   const stops = [];
   const trips = [];
   const stopTimes = [];

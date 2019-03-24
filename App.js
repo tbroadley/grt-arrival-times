@@ -43,6 +43,7 @@ class App extends React.Component {
 
   componentDidMount() {
     const update = () => {
+      const start = getTime();
       updateDepartureTimes(TIME_HORIZON, data => {
         this.setState({ data });
         if (process.env.GRT_TTY) {
