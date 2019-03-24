@@ -2,10 +2,13 @@
 const chalk = require("chalk");
 const fs = require("fs");
 const { render } = require("ink");
+const path = require("path");
 const h = require("react-hyperscript");
 const tty = require("tty");
 
 const { App } = require("./App");
+
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 if (process.env.GRT_TTY) {
   chalk.enabled = true;

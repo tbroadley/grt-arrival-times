@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^7.0.0",
     "gtfs-realtime-bindings": "0.0.4",
     "gtfs-stream": "^1.0.4",
     "ink": "^2.0.6",

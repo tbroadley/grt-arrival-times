@@ -8,8 +8,10 @@ const CRITICAL_TIME_HORIZON = 5;
 const STOPS_PER_ROW = 4;
 const REFRESH_PERIOD = 1;
 
+const OPEN_WEATHER_MAP_CITY_ID = 6176823;
+
 const { BusStop } = require("./BusStop");
-const { getTime, updateDepartureTimes } = require("./lib");
+const { getTime, updateDepartureTimes, getCurrentWeather } = require("./lib");
 
 class Clock extends React.Component {
   constructor() {
@@ -32,6 +34,45 @@ class Clock extends React.Component {
 
   render() {
     return this.state.currentTime;
+  }
+}
+
+class Weather extends React.Component {
+  constructor() {
+    super();
+    this.state = {};
+  }
+
+  componentDidMount() {
+    const update = () => {
+      getCurrentWeather(OPEN_WEATHER_MAP_CITY_ID, (err, response, body) => {
+        if (err) return;
+        this.setState({ data: JSON.parse(body) });
+      });
+    };
+
+    update();
+    this.interval = setInterval(update, 30 * 60 * 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  render() {
+    if (!this.state.data) return null;
+
+    const { weather, main } = this.state.data;
+
+    let weatherParts = [];
+    if (main && main.temp) {
+      weatherParts.push(`${_.round(main.temp)}°C`);
+    }
+    if (weather && weather.length > 0 && weather[0].main) {
+      weatherParts.push(weather[0].main);
+    }
+
+    return weatherParts.join(", ");
   }
 }
 
@@ -89,7 +130,8 @@ class App extends React.Component {
             )
           )
         ),
-        h(Clock)
+        h(Clock),
+        h(Weather)
       ]
     );
   }

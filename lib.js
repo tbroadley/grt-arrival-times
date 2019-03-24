@@ -158,8 +158,18 @@ function updateDepartureTimes(timeHorizon, cb) {
     });
 }
 
+function getCurrentWeather(cityId, cb) {
+  request(
+    `https://openweathermap.org/data/2.5/weather?id=${cityId}&appid=${
+      process.env.OPEN_WEATHER_MAP_API_KEY
+    }`,
+    cb
+  );
+}
+
 module.exports = {
   getTime,
   parseDepartureTime,
-  updateDepartureTimes
+  updateDepartureTimes,
+  getCurrentWeather
 };
