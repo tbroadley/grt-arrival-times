@@ -160,7 +160,7 @@ function updateDepartureTimes(timeHorizon, cb) {
 
 function getCurrentWeather(cityId, cb) {
   request(
-    `https://openweathermap.org/data/2.5/weather?id=${cityId}&appid=${
+    `https://api.openweathermap.org/data/2.5/weather?id=${cityId}&units=metric&appid=${
       process.env.OPEN_WEATHER_MAP_API_KEY
     }`,
     cb
