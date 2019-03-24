@@ -178,6 +178,7 @@ class App extends React.Component {
               [h(Color, { gray: true }, `No buses in the next ${TIME_HORIZON} minutes`)] :
               orderedStopTimes.map(({ tripId, routeNumber, routeDescription, arrivalTime }) => {
                 const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(getTime(), 'seconds') / 60);
+                if (timeToArrival < 0) return null;
                 return h(Box, { marginBottom: 1, flexDirection: 'column', key: tripId }, [
                   `${routeNumber}: ${routeDescription}`,
                   h(Color, { bgRed: timeToArrival <= CRITICAL_TIME_HORIZON },
