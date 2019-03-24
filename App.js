@@ -11,10 +11,34 @@ const REFRESH_PERIOD = 1;
 const { BusStop } = require("./BusStop");
 const { getTime, updateDepartureTimes } = require("./lib");
 
+class Clock extends React.Component {
+  constructor() {
+    super();
+    this.state = { currentTime: "Loading time..." };
+  }
+
+  componentDidMount() {
+    const update = () => {
+      this.setState({ currentTime: getTime().format("llll") });
+    };
+
+    update();
+    this.interval = setInterval(update, 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  render() {
+    return this.state.currentTime;
+  }
+}
+
 class App extends React.Component {
   constructor() {
     super();
-    this.state = { data: [], currentTime: "Loading time..." };
+    this.state = { data: [] };
   }
 
   componentDidMount() {
@@ -27,7 +51,6 @@ class App extends React.Component {
           );
         }
       });
-      this.setState({ currentTime: getTime().format("llll") });
     };
 
     update();
@@ -65,7 +88,7 @@ class App extends React.Component {
             )
           )
         ),
-        `${this.state.currentTime}`
+        h(Clock)
       ]
     );
   }
