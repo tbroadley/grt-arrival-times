@@ -45,13 +45,16 @@ import collections
 import contextlib
 import json
 import os
+import requests
 import shutil
 import subprocess
 import sys
+import urllib.request
 
 import snapcraft
 from snapcraft import sources
 from snapcraft.internal import common, errors
+from snapcraft.internal.indicators import download_requests_stream
 from snapcraft.file_utils import link_or_copy, link_or_copy_tree
 
 
@@ -189,7 +192,8 @@ class NodePlugin(snapcraft.BasePlugin):
         )
         self._nodejs_tar_handle = None
         print('Downloading Node for armhf')
-        # self._nodejs_tar.download()
+        cmd = ['curl', self._nodejs_release_uri, '--output', os.path.join(self._npm_dir, os.path.basename(self._nodejs_release_uri))]
+        subprocess.check_output(cmd)
         print('Provisioning Node for armhf')
         self._nodejs_tar.provision(self._npm_dir, clean_target=False, keep_tarball=True)
         print('Copying Node for armhf')

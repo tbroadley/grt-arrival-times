@@ -8,7 +8,11 @@ const tty = require("tty");
 
 const { App } = require("./App");
 
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+if (process.env.GRT_TTY) {
+  require("dotenv").config({ path: "/home/tbroadley/.env" });
+} else {
+  require("dotenv").config();
+}
 
 if (process.env.GRT_TTY) {
   chalk.enabled = true;
