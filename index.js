@@ -32,8 +32,8 @@ function getStartOfDay() {
   return result;
 }
 
-function parseArrivalTime(arrivalTime) {
-  const [hourString, minuteString, secondString] = arrivalTime.split(':');
+function parseDepartureTime(departureTime) {
+  const [hourString, minuteString, secondString] = departureTime.split(':');
   if (!hourString || !minuteString || !secondString) return false;
 
   const hour = _.toNumber(hourString);
@@ -61,7 +61,7 @@ class App extends React.Component {
     return STOP_IDS.map(stop_id => {
       const stop = _.find(stops, { stop_id });
 
-      const stopTimesForStop = _.filter(stopTimes, { stop_id }).map(({ trip_id, arrival_time }) => {
+      const stopTimesForStop = _.filter(stopTimes, { stop_id }).map(({ trip_id, departure_time }) => {
         const trip = _.find(trips, { trip_id });
 
         const calendarDate = _.find(calendarDates, {
@@ -75,7 +75,7 @@ class App extends React.Component {
           tripId: trip.trip_id,
           routeNumber: trip.route_id,
           routeDescription: trip.trip_headsign,
-          arrivalTime: arrival_time,
+          departureTime: departure_time,
         };
       }).filter(s => s);
 
@@ -84,17 +84,17 @@ class App extends React.Component {
         const stopTime = _.find(stopTimesForStop, { tripId: update.trip_update.trip.trip_id });
         const stopTimeUpdatesForThisStop = _.filter(update.trip_update.stop_time_update, { stop_id });
         stopTimeUpdatesForThisStop.forEach(u => {
-          if (u.arrival && u.arrival.time && u.arrival.time.low) {
-            stopTime.arrivalTime = getTime(u.arrival.time.low * 1000).format('HH:mm:ss');
+          if (u.departure && u.departure.time && u.departure.time.low) {
+            stopTime.departureTime = getTime(u.departure.time.low * 1000).format('HH:mm:ss');
           }
         });
       });
 
       const filteredStopTimes = stopTimesForStop.filter(s => {
-        const at = parseArrivalTime(s.arrivalTime);
+        const at = parseDepartureTime(s.departureTime);
         return at > getTime() && at <= getTime().add(TIME_HORIZON, 'minutes');
       });
-      const orderedStopTimes = _.sortBy(filteredStopTimes, 'arrivalTime');
+      const orderedStopTimes = _.sortBy(filteredStopTimes, 'departureTime');
 
       return {
         stopName: stop.stop_name,
@@ -103,7 +103,7 @@ class App extends React.Component {
     });
   }
 
-  updateArrivalTimes() {
+  updateDepartureTimes() {
     const start = getTime();
 
     const stops = [];
@@ -148,7 +148,7 @@ class App extends React.Component {
 
   componentDidMount() {
     const update = () => {
-      this.updateArrivalTimes();
+      this.updateDepartureTimes();
       this.setState({ currentTime: getTime().format('llll') });
     };
 
@@ -176,13 +176,13 @@ class App extends React.Component {
             h(Box, { marginBottom: 1 }, h(Color, { blue: true }, stopName)),
             ...(orderedStopTimes.length === 0 ?
               [h(Color, { gray: true }, `No buses in the next ${TIME_HORIZON} minutes`)] :
-              orderedStopTimes.map(({ tripId, routeNumber, routeDescription, arrivalTime }) => {
-                const timeToArrival = _.floor(parseArrivalTime(arrivalTime).diff(getTime(), 'seconds') / 60);
-                if (timeToArrival < 0) return null;
+              orderedStopTimes.map(({ tripId, routeNumber, routeDescription, departureTime }) => {
+                const timeToDeparture = _.floor(parseDepartureTime(departureTime).diff(getTime(), 'seconds') / 60);
+                if (timeToDeparture < 0) return null;
                 return h(Box, { marginBottom: 1, flexDirection: 'column', key: tripId }, [
                   `${routeNumber}: ${routeDescription}`,
-                  h(Color, { bgRed: timeToArrival <= CRITICAL_TIME_HORIZON },
-                    timeToArrival === 0 ? '<1 min' : timeToArrival === 1 ? '1 min' : `${timeToArrival} mins`
+                  h(Color, { bgRed: timeToDeparture <= CRITICAL_TIME_HORIZON },
+                    timeToDeparture === 0 ? '<1 min' : timeToDeparture === 1 ? '1 min' : `${timeToDeparture} mins`
                   )
                 ]);
               })
