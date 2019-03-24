@@ -23,5 +23,8 @@ copy:
 install:
 	ssh ${REMOTE_LOGIN} snap install ${SNAP_FILE} ${SNAP_INSTALL_FLAGS}
 
+ssh:
+	ssh ${REMOTE_LOGIN}
+
 clean:
 	rm ${SNAP_FILE}
