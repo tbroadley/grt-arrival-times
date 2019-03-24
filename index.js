@@ -141,7 +141,9 @@ class App extends React.Component {
           .on('finish', () => {
             const data = this.processData(stops, trips, calendarDates, stopTimes, stopTimeUpdates);
             this.setState({ data });
-            console.error(`Took ${getTime().diff(start, 'seconds')} seconds to update`);
+            if (process.env.GRT_TTY) {
+              console.error(`Took ${getTime().diff(start, 'seconds')} seconds to update`);
+            }
           });
       });
   }
