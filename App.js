@@ -217,7 +217,7 @@ class App extends React.Component {
       Box,
       {
         width,
-        height,
+        height: height - 1,
         flexDirection: "column"
       },
       [h(GRT, { data: this.state.data }), h(Clock), h(Weather)]
