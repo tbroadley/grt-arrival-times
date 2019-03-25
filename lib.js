@@ -3,15 +3,23 @@ const _ = require("lodash");
 const moment = require("moment-timezone");
 const request = require("request");
 
-const STOP_IDS = [
-  "2513",
-  "2523",
-  "2512",
-  "2524",
-  "1171",
-  "3623",
-  "3619",
-  "3620"
+const STOPS = [
+  [
+    { id: "2523", direction: "Eastbound" },
+    { id: "2513", direction: "Westbound" }
+  ],
+  [
+    { id: "2524", direction: "Eastbound" },
+    { id: "2512", direction: "Westbound" }
+  ],
+  [
+    { id: "1171", direction: "Northbound" },
+    { id: "3623", direction: "Southbound" }
+  ],
+  [
+    { id: "3620", direction: "Eastbound" },
+    { id: "3619", direction: "Westbound" }
+  ]
 ];
 
 function getTime(time) {
@@ -56,59 +64,62 @@ function processData(
   { stops, trips, calendarDates, stopTimes, stopTimeUpdates },
   timeHorizon
 ) {
-  return STOP_IDS.map(stop_id => {
-    const stop = _.find(stops, { stop_id });
+  return STOPS.map(stopPair => {
+    return stopPair.map(({ id: stop_id, direction }) => {
+      const stop = _.find(stops, { stop_id });
 
-    const stopTimesForStop = _.filter(stopTimes, { stop_id })
-      .map(({ trip_id, departure_time }) => {
-        const trip = _.find(trips, { trip_id });
+      const stopTimesForStop = _.filter(stopTimes, { stop_id })
+        .map(({ trip_id, departure_time }) => {
+          const trip = _.find(trips, { trip_id });
 
-        const calendarDate = _.find(calendarDates, {
-          service_id: trip.service_id,
-          date: getStartOfDay().format("YYYYMMDD"),
-          exception_type: "1" // Service is running today
-        });
-        if (!calendarDate) return false;
+          const calendarDate = _.find(calendarDates, {
+            service_id: trip.service_id,
+            date: getStartOfDay().format("YYYYMMDD"),
+            exception_type: "1" // Service is running today
+          });
+          if (!calendarDate) return false;
 
-        return {
-          tripId: trip.trip_id,
-          routeNumber: trip.route_id,
-          routeDescription: trip.trip_headsign,
-          departureTime: departure_time
-        };
-      })
-      .filter(s => s);
+          return {
+            tripId: trip.trip_id,
+            routeNumber: trip.route_id,
+            routeDescription: trip.trip_headsign,
+            departureTime: departure_time
+          };
+        })
+        .filter(s => s);
 
-    const stopTimeUpdatesForStop = _.filter(stopTimeUpdates, update =>
-      _.some(update.trip_update.stop_time_update, { stop_id })
-    );
-    stopTimeUpdatesForStop.forEach(update => {
-      const stopTime = _.find(stopTimesForStop, {
-        tripId: update.trip_update.trip.trip_id
-      });
-      const stopTimeUpdatesForThisStop = _.filter(
-        update.trip_update.stop_time_update,
-        { stop_id }
+      const stopTimeUpdatesForStop = _.filter(stopTimeUpdates, update =>
+        _.some(update.trip_update.stop_time_update, { stop_id })
       );
-      stopTimeUpdatesForThisStop.forEach(u => {
-        if (u.departure && u.departure.time && u.departure.time.low) {
-          stopTime.departureTime = getTime(u.departure.time.low * 1000).format(
-            "HH:mm:ss"
-          );
-        }
+      stopTimeUpdatesForStop.forEach(update => {
+        const stopTime = _.find(stopTimesForStop, {
+          tripId: update.trip_update.trip.trip_id
+        });
+        const stopTimeUpdatesForThisStop = _.filter(
+          update.trip_update.stop_time_update,
+          { stop_id }
+        );
+        stopTimeUpdatesForThisStop.forEach(u => {
+          if (u.departure && u.departure.time && u.departure.time.low) {
+            stopTime.departureTime = getTime(
+              u.departure.time.low * 1000
+            ).format("HH:mm:ss");
+          }
+        });
       });
-    });
 
-    const filteredStopTimes = stopTimesForStop.filter(s => {
-      const at = parseDepartureTime(s.departureTime);
-      return at > getTime() && at <= getTime().add(timeHorizon, "minutes");
-    });
-    const orderedStopTimes = _.sortBy(filteredStopTimes, "departureTime");
+      const filteredStopTimes = stopTimesForStop.filter(s => {
+        const at = parseDepartureTime(s.departureTime);
+        return at > getTime() && at <= getTime().add(timeHorizon, "minutes");
+      });
+      const orderedStopTimes = _.sortBy(filteredStopTimes, "departureTime");
 
-    return {
-      stopName: stop.stop_name,
-      orderedStopTimes
-    };
+      return {
+        stopName: stop.stop_name,
+        direction,
+        orderedStopTimes
+      };
+    });
   });
 }
 

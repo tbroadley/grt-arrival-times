@@ -5,7 +5,6 @@ const h = require("react-hyperscript");
 
 const TIME_HORIZON = 30;
 const CRITICAL_TIME_HORIZON = 5;
-const STOPS_PER_ROW = 4;
 const REFRESH_PERIOD = 1;
 
 const OPEN_WEATHER_MAP_CITY_ID = 6176823;
@@ -110,16 +109,17 @@ const TimeToDeparture = ({
 };
 
 const BusStop = ({
-  stopName,
+  columnWidth,
+  direction,
   orderedStopTimes,
   timeHorizon,
   criticalTimeHorizon
 }) =>
-  h(Box, { flexDirection: "column", flexGrow: 1, margin: 1 }, [
-    h(Box, { marginBottom: 1 }, h(Color, { blue: true }, stopName)),
+  h(Box, { flexDirection: "column", marginRight: 3 }, [
+    h(Box, null, direction),
     orderedStopTimes.length === 0
       ? h(Color, { gray: true }, `No buses in the next ${timeHorizon} minutes`)
-      : h(Box, { flexDirection: "row" }, [
+      : h(Box, { flexDirection: "row", width: columnWidth }, [
           h(
             Box,
             { flexDirection: "column", marginRight: 1 },
@@ -134,6 +134,52 @@ const BusStop = ({
           )
         ])
   ]);
+
+const GRT = ({ data }) => {
+  function departureToColumnWidth({ routeDescription }) {
+    return 3 + 1 + routeDescription.length + 1 + 7;
+  }
+
+  const columnWidth = departureToColumnWidth(
+    _.maxBy(
+      _.flatMap(_.flatten(data), "orderedStopTimes"),
+      departureToColumnWidth
+    )
+  );
+  return h(
+    Box,
+    { flexDirection: "column", marginBottom: 1 },
+    data.map((stopPair, index) =>
+      h(
+        Box,
+        {
+          flexDirection: "column",
+          marginBottom: index === data.length - 1 ? 0 : 1
+        },
+        [
+          h(
+            Box,
+            { marginBottom: 1 },
+            h(Color, { blue: true }, stopPair[0].stopName)
+          ),
+          h(
+            Box,
+            { flexDirection: "row" },
+            stopPair.map(({ direction, orderedStopTimes }) =>
+              h(BusStop, {
+                columnWidth,
+                direction,
+                orderedStopTimes,
+                timeHorizon: TIME_HORIZON,
+                criticalTimeHorizon: CRITICAL_TIME_HORIZON
+              })
+            )
+          )
+        ]
+      )
+    )
+  );
+};
 
 class App extends React.Component {
   constructor() {
@@ -174,24 +220,7 @@ class App extends React.Component {
         height,
         flexDirection: "column"
       },
-      [
-        ..._.chunk(this.state.data, STOPS_PER_ROW).map(chunk =>
-          h(
-            Box,
-            { flexDirection: "row", marginBottom: 3 },
-            chunk.map(({ stopName, orderedStopTimes }) =>
-              h(BusStop, {
-                stopName,
-                orderedStopTimes,
-                timeHorizon: TIME_HORIZON,
-                criticalTimeHorizon: CRITICAL_TIME_HORIZON
-              })
-            )
-          )
-        ),
-        h(Clock),
-        h(Weather)
-      ]
+      [h(GRT, { data: this.state.data }), h(Clock), h(Weather)]
     );
   }
 }
