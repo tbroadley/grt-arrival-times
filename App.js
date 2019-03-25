@@ -98,9 +98,11 @@ const TimeToDeparture = ({
       bgRed: timeToDeparture <= criticalTimeHorizon
     },
     timeToDeparture === 0
-      ? "<1 min"
+      ? "<1 min "
       : timeToDeparture === 1
-      ? "1 min"
+      ? " 1 min "
+      : timeToDeparture < 10
+      ? ` ${timeToDeparture} mins`
       : `${timeToDeparture} mins`
   );
 };
@@ -118,7 +120,7 @@ const BusStop = ({
       : h(Box, { flexDirection: "row" }, [
           h(
             Box,
-            { flexDirection: "column" },
+            { flexDirection: "column", marginRight: 1 },
             orderedStopTimes.map(stopTime => h(RouteDescription, stopTime))
           ),
           h(
