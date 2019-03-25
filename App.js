@@ -80,8 +80,10 @@ class Weather extends React.Component {
   }
 }
 
-const RouteDescription = ({ routeNumber, routeDescription }) =>
-  `${routeNumber}: ${routeDescription}`;
+const RouteDescription = ({ routeNumber, routeDescription }) => {
+  const paddingCount = _.max([0, 3 - routeNumber.length]);
+  return `${_.repeat(" ", paddingCount)}${routeNumber} ${routeDescription}`;
+};
 
 const TimeToDeparture = ({
   stopTime: { tripId, routeNumber, routeDescription, departureTime },
