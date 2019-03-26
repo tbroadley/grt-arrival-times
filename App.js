@@ -116,23 +116,31 @@ const BusStop = ({
   criticalTimeHorizon
 }) =>
   h(Box, { flexDirection: "column", marginRight: 3 }, [
-    h(Box, null, direction),
+    h(Color, { yellow: true }, direction),
     orderedStopTimes.length === 0
       ? h(Color, { gray: true }, `No buses in the next ${timeHorizon} minutes`)
-      : h(Box, { flexDirection: "row", width: columnWidth }, [
-          h(
-            Box,
-            { flexDirection: "column", marginRight: 1 },
-            orderedStopTimes.map(stopTime => h(RouteDescription, stopTime))
-          ),
-          h(
-            Box,
-            { flexDirection: "column" },
-            orderedStopTimes.map(stopTime =>
-              h(TimeToDeparture, { stopTime, criticalTimeHorizon })
+      : h(
+          Box,
+          {
+            flexDirection: "row",
+            width: columnWidth,
+            justifyContent: "space-between"
+          },
+          [
+            h(
+              Box,
+              { flexDirection: "column", marginRight: 1 },
+              orderedStopTimes.map(stopTime => h(RouteDescription, stopTime))
+            ),
+            h(
+              Box,
+              { flexDirection: "column" },
+              orderedStopTimes.map(stopTime =>
+                h(TimeToDeparture, { stopTime, criticalTimeHorizon })
+              )
             )
-          )
-        ])
+          ]
+        )
   ]);
 
 const GRT = ({ data }) => {
@@ -157,11 +165,7 @@ const GRT = ({ data }) => {
           marginBottom: index === data.length - 1 ? 0 : 1
         },
         [
-          h(
-            Box,
-            { marginBottom: 1 },
-            h(Color, { blue: true }, stopPair[0].stopName)
-          ),
+          h(Box, null, h(Color, { blue: true }, stopPair[0].stopName)),
           h(
             Box,
             { flexDirection: "row" },
