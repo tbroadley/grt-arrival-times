@@ -188,52 +188,10 @@ const BusStop = ({
         )
   ]);
 
-const GRT = ({ data }) => {
-  function departureToColumnWidth({ routeDescription }) {
-    return 3 + 1 + routeDescription.length + 1 + 7;
-  }
-
-  const columnWidth = departureToColumnWidth(
-    _.maxBy(
-      _.flatMap(_.flatten(data), "orderedStopTimes"),
-      departureToColumnWidth
-    )
-  );
-  return h(
-    Box,
-    { flexDirection: "column", marginBottom: 1 },
-    data.map((stopPair, index) =>
-      h(
-        Box,
-        {
-          flexDirection: "column",
-          marginBottom: index === data.length - 1 ? 0 : 1
-        },
-        [
-          h(Box, null, h(Color, { blue: true }, stopPair[0].stopName)),
-          h(
-            Box,
-            { flexDirection: "row" },
-            stopPair.map(({ direction, orderedStopTimes }) =>
-              h(BusStop, {
-                columnWidth,
-                direction,
-                orderedStopTimes,
-                timeHorizon: TIME_HORIZON,
-                criticalTimeHorizon: CRITICAL_TIME_HORIZON
-              })
-            )
-          )
-        ]
-      )
-    )
-  );
-};
-
-class App extends React.Component {
+class GRT extends React.Component {
   constructor() {
     super();
-    this.state = { data: [] };
+    this.state = {};
   }
 
   componentDidMount() {
@@ -258,21 +216,63 @@ class App extends React.Component {
   }
 
   render() {
-    if (this.state.data.length === 0) return "Loading...";
+    const { data } = this.state;
+    if (!data) {
+      return h(Box, { marginBottom: 1 }, "Loading GRT data...");
+    }
 
-    const { width, height } = this.props;
+    function departureToColumnWidth({ routeDescription }) {
+      return 3 + 1 + routeDescription.length + 1 + 7;
+    }
 
+    const columnWidth = departureToColumnWidth(
+      _.maxBy(
+        _.flatMap(_.flatten(data), "orderedStopTimes"),
+        departureToColumnWidth
+      )
+    );
     return h(
       Box,
-      {
-        width,
-        height: height - 1,
-        flexDirection: "column"
-      },
-      [h(Clock), h(GRT, { data: this.state.data }), h(Weather), h(Forecast)]
+      { flexDirection: "column", marginBottom: 1 },
+      data.map((stopPair, index) =>
+        h(
+          Box,
+          {
+            flexDirection: "column",
+            marginBottom: index === data.length - 1 ? 0 : 1
+          },
+          [
+            h(Box, null, h(Color, { blue: true }, stopPair[0].stopName)),
+            h(
+              Box,
+              { flexDirection: "row" },
+              stopPair.map(({ direction, orderedStopTimes }) =>
+                h(BusStop, {
+                  columnWidth,
+                  direction,
+                  orderedStopTimes,
+                  timeHorizon: TIME_HORIZON,
+                  criticalTimeHorizon: CRITICAL_TIME_HORIZON
+                })
+              )
+            )
+          ]
+        )
+      )
     );
   }
 }
+
+const App = ({ width, height }) =>
+  h(
+    Box,
+    {
+      width,
+      height: height - 1,
+      flexDirection: "column"
+    },
+    [h(Clock), h(GRT), h(Weather), h(Forecast)]
+  );
 
 module.exports = {
   App
