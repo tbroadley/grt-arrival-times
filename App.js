@@ -1,5 +1,6 @@
 const { Box, Color } = require("ink");
 const _ = require("lodash");
+const moment = require("moment");
 const React = require("react");
 const h = require("react-hyperscript");
 
@@ -11,9 +12,12 @@ const OPEN_WEATHER_MAP_CITY_ID = 6176823;
 
 const {
   getTime,
+  getStartOfDay,
   parseDepartureTime,
   updateDepartureTimes,
-  getCurrentWeather
+  weatherObjectToString,
+  getCurrentWeather,
+  getForecast
 } = require("./lib");
 
 class Clock extends React.Component {
@@ -36,7 +40,7 @@ class Clock extends React.Component {
   }
 
   render() {
-    return this.state.currentTime;
+    return h(Box, { marginBottom: 1 }, this.state.currentTime);
   }
 }
 
@@ -64,18 +68,59 @@ class Weather extends React.Component {
 
   render() {
     if (!this.state.data) return null;
+    return weatherObjectToString(_.omit(this.state.data, "dt"));
+  }
+}
 
-    const { weather, main } = this.state.data;
+class Forecast extends React.Component {
+  constructor() {
+    super();
+    this.state = {};
+  }
 
-    let weatherParts = [];
-    if (main && main.temp) {
-      weatherParts.push(`${_.round(main.temp)}°C`);
-    }
-    if (weather && weather.length > 0 && weather[0].main) {
-      weatherParts.push(weather[0].main);
-    }
+  componentDidMount() {
+    const update = () => {
+      getForecast(OPEN_WEATHER_MAP_CITY_ID, (err, response, body) => {
+        if (err) return;
+        this.setState({ data: JSON.parse(body) });
+      });
+    };
 
-    return weatherParts.join(", ");
+    update();
+    this.interval = setInterval(update, 30 * 60 * 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  render() {
+    if (!this.state.data) return null;
+
+    const { list } = this.state.data;
+    if (!list) return null;
+
+    const keyHours = [8, 12, 18];
+    const nextKeyHours = keyHours
+      .map(hour => {
+        const result = getStartOfDay().add(hour, "hours");
+        if (getTime().hour() >= hour) {
+          result.add(1, "day");
+        }
+        return result;
+      })
+      .sort();
+    const nextWeatherObjects = _.filter(
+      nextKeyHours.map(time =>
+        list.find(({ dt }) => moment.utc(dt * 1000) >= time)
+      )
+    );
+
+    return h(
+      React.Fragment,
+      null,
+      nextWeatherObjects.map(weatherObjectToString)
+    );
   }
 }
 
@@ -224,7 +269,7 @@ class App extends React.Component {
         height: height - 1,
         flexDirection: "column"
       },
-      [h(GRT, { data: this.state.data }), h(Clock), h(Weather)]
+      [h(Clock), h(GRT, { data: this.state.data }), h(Weather), h(Forecast)]
     );
   }
 }

@@ -169,6 +169,25 @@ function updateDepartureTimes(timeHorizon, cb) {
     });
 }
 
+function weatherObjectToString({ dt, weather, main }) {
+  const weatherParts = [];
+  if (main && main.temp) {
+    weatherParts.push(`${_.round(main.temp)}°C`);
+  }
+  if (weather && weather.length > 0 && weather[0].main) {
+    weatherParts.push(weather[0].main);
+  }
+
+  if (dt) {
+    const date = moment.utc(dt * 1000).tz("America/Toronto");
+    const datePart = date.day() === getTime().day() ? "Today" : "Tomorrow";
+    const timePart = date.format("LT");
+    return `${datePart} at ${timePart}: ${weatherParts.join(", ")}`;
+  } else {
+    return weatherParts.join(", ");
+  }
+}
+
 function getCurrentWeather(cityId, cb) {
   request(
     `https://api.openweathermap.org/data/2.5/weather?id=${cityId}&units=metric&appid=${
@@ -178,9 +197,21 @@ function getCurrentWeather(cityId, cb) {
   );
 }
 
+function getForecast(cityId, cb) {
+  request(
+    `https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&units=metric&appid=${
+      process.env.OPEN_WEATHER_MAP_API_KEY
+    }`,
+    cb
+  );
+}
+
 module.exports = {
   getTime,
+  getStartOfDay,
   parseDepartureTime,
   updateDepartureTimes,
-  getCurrentWeather
+  weatherObjectToString,
+  getCurrentWeather,
+  getForecast
 };
