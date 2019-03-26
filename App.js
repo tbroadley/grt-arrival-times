@@ -67,7 +67,7 @@ class Weather extends React.Component {
   }
 
   render() {
-    if (!this.state.data) return null;
+    if (!this.state.data) return "Loading weather data...";
     return weatherObjectToString(_.omit(this.state.data, "dt"));
   }
 }
@@ -95,10 +95,10 @@ class Forecast extends React.Component {
   }
 
   render() {
-    if (!this.state.data) return null;
+    if (!this.state.data) return "Loading weather forecast data...";
 
     const { list } = this.state.data;
-    if (!list) return null;
+    if (!list) return "Loading weather forecast data...";
 
     const keyHours = [8, 12, 18];
     const nextKeyHours = keyHours
