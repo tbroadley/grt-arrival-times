@@ -180,7 +180,7 @@ function weatherObjectToString({ dt, weather, main }) {
 
   if (dt) {
     const date = moment.utc(dt * 1000).tz("America/Toronto");
-    const datePart = date.day() === getTime().day() ? "Today" : "Tomorrow";
+    const datePart = date.date() === getTime().date() ? "Today" : "Tomorrow";
     const timePart = date.format("LT");
     return `${datePart} at ${timePart}: ${weatherParts.join(", ")}`;
   } else {
