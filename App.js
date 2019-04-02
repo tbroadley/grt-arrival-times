@@ -32,7 +32,7 @@ class Clock extends React.Component {
     };
 
     update();
-    this.interval = setInterval(update, 1000);
+    this.interval = setInterval(update, 2 * 1000);
   }
 
   componentWillUnmount() {
