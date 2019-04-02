@@ -73,7 +73,6 @@ function processData(
           const { service_id, route_id, trip_headsign } = _.find(trips, {
             trip_id
           });
-          const { route_long_name } = _.find(routes, { route_id });
 
           const calendarDate = _.find(calendarDates, {
             service_id: service_id,
@@ -85,7 +84,8 @@ function processData(
           return {
             tripId: trip_id,
             routeNumber: route_id,
-            routeDescription: trip_headsign || route_long_name,
+            routeDescription:
+              trip_headsign || _.find(routes, { route_id }).route_long_name,
             departureTime: departure_time
           };
         })
