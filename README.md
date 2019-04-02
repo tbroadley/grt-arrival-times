@@ -8,3 +8,18 @@ cd grt-arrival-times
 npm install
 node index.js
 ```
+
+## Building
+
+```shell
+sudo snap start multipass
+make
+```
+
+## Make targets
+
+- `make snap` builds a snap file containing Node.js, the application, and the libraries it depends on.
+- `make copy` copies the snap file to the Raspberry Pi.
+- `make install` installs the snap file that was copied to the Raspberry Pi.
+- `make clean` removes the snap file from the development machine.
+- `make` runs the above four targets in sequence.
