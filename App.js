@@ -250,7 +250,7 @@ class GRT extends React.Component {
             marginBottom: index === data.length - 1 ? 0 : 1
           },
           [
-            h(Box, null, h(Color, { blue: true }, stopPair[0].stopName)),
+            h(Box, null, h(Color, { blueBright: true }, stopPair[0].stopName)),
             h(
               Box,
               { flexDirection: "row" },
