@@ -192,13 +192,21 @@ class GRT extends React.Component {
   constructor() {
     super();
     this.state = {};
+    this.updating = false;
   }
 
   componentDidMount() {
     const update = () => {
+      if (this.updating) {
+        return;
+      }
+
       const start = getTime();
+      this.updating = true;
+
       updateDepartureTimes(TIME_HORIZON, data => {
         this.setState({ data });
+        this.updating = false;
         if (process.env.GRT_TTY) {
           console.error(
             `Took ${getTime().diff(start, "seconds")} seconds to update`
