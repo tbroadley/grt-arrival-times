@@ -61,7 +61,7 @@ function parseDepartureTime(departureTime) {
 }
 
 function processData(
-  { stops, trips, calendarDates, stopTimes, stopTimeUpdates },
+  { routes, stops, trips, calendarDates, stopTimes, stopTimeUpdates },
   timeHorizon
 ) {
   return STOPS.map(stopPair => {
@@ -70,19 +70,22 @@ function processData(
 
       const stopTimesForStop = _.filter(stopTimes, { stop_id })
         .map(({ trip_id, departure_time }) => {
-          const trip = _.find(trips, { trip_id });
+          const { service_id, route_id, trip_headsign } = _.find(trips, {
+            trip_id
+          });
+          const { route_long_name } = _.find(routes, { route_id });
 
           const calendarDate = _.find(calendarDates, {
-            service_id: trip.service_id,
+            service_id: service_id,
             date: getStartOfDay().format("YYYYMMDD"),
             exception_type: "1" // Service is running today
           });
           if (!calendarDate) return false;
 
           return {
-            tripId: trip.trip_id,
-            routeNumber: trip.route_id,
-            routeDescription: trip.trip_headsign,
+            tripId: trip_id,
+            routeNumber: route_id,
+            routeDescription: trip_headsign || route_long_name,
             departureTime: departure_time
           };
         })
@@ -124,6 +127,7 @@ function processData(
 }
 
 function updateDepartureTimes(timeHorizon, cb) {
+  const routes = [];
   const stops = [];
   const trips = [];
   const stopTimes = [];
@@ -138,6 +142,8 @@ function updateDepartureTimes(timeHorizon, cb) {
     .on("data", entity => {
       entityCount += 1;
       switch (entity.type) {
+        case "route":
+          routes.push(entity.data);
         case "stop":
           stops.push(entity.data);
           break;
@@ -161,7 +167,14 @@ function updateDepartureTimes(timeHorizon, cb) {
         .on("finish", () =>
           cb(
             processData(
-              { stops, trips, calendarDates, stopTimes, stopTimeUpdates },
+              {
+                routes,
+                stops,
+                trips,
+                calendarDates,
+                stopTimes,
+                stopTimeUpdates
+              },
               timeHorizon
             )
           )
