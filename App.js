@@ -24,7 +24,7 @@ const {
 class MessageBoard extends React.Component {
   constructor() {
     super();
-    this.state = { messages: [] };
+    this.state = { messages: [], aliases: {} };
   }
 
   componentDidMount() {
@@ -33,25 +33,45 @@ class MessageBoard extends React.Component {
     const port = 3000;
 
     app.post("/send-message", (req, res) => {
-      this.setState(
-        ({ messages }) => ({
-          messages: messages.concat([
-            {
-              receivedAt: getTime(),
-              ipAddress: req.ip,
-              text: req.body.message
+      const {
+        ip,
+        body: { message }
+      } = req;
+
+      if (!message) {
+        res.status(400).end();
+        return;
+      } else if (message.startsWith("/alias ")) {
+        this.setState(
+          ({ aliases }) => ({
+            aliases: {
+              ...aliases,
+              [ip]: message.replace("/alias ", "")
             }
-          ])
-        }),
-        () => res.end()
-      );
+          }),
+          () => res.end()
+        );
+      } else {
+        this.setState(
+          ({ messages }) => ({
+            messages: messages.concat([
+              {
+                receivedAt: getTime(),
+                ipAddress: req.ip,
+                text: req.body.message
+              }
+            ])
+          }),
+          () => res.end()
+        );
+      }
     });
 
     app.listen(port);
   }
 
   render() {
-    const { messages } = this.state;
+    const { messages, aliases } = this.state;
 
     return h(
       Box,
@@ -60,7 +80,8 @@ class MessageBoard extends React.Component {
         .slice(-50)
         .map(
           ({ receivedAt, ipAddress, text }) =>
-            `${receivedAt.format("llll")} ${ipAddress} ${text}`
+            `${receivedAt.format("llll")} ${aliases[ipAddress] ||
+              ipAddress} ${text}`
         )
     );
   }
