@@ -27,11 +27,15 @@ function getTime(time) {
 }
 
 function getStartOfDay() {
-  const result = getTime()
+  return getTime()
     .hour(0)
     .minute(0)
     .second(0)
     .millisecond(0);
+}
+
+function getStartOfGRTDay() {
+  const result = getStartOfDay();
 
   // After midnight, subtract 24 hours, since GRT returns 25:00:00 for 1 am
   if (getTime().hour() < 4) {
@@ -54,7 +58,7 @@ function parseDepartureTime(departureTime) {
   const second = _.toNumber(secondString);
   if (!_.isFinite(second)) return false;
 
-  return getStartOfDay()
+  return getStartOfGRTDay()
     .add(hour, "hours")
     .add(minute, "minutes")
     .add(second, "seconds");
@@ -76,7 +80,7 @@ function processData(
 
           const calendarDate = _.find(calendarDates, {
             service_id: service_id,
-            date: getStartOfDay().format("YYYYMMDD"),
+            date: getStartOfGRTDay().format("YYYYMMDD"),
             exception_type: "1" // Service is running today
           });
           if (!calendarDate) return false;
