@@ -94,7 +94,8 @@ class MessageBoard extends React.Component {
       }),
       h(FixedWidthColumn, {
         rows: messagesToDisplay.map(
-          ({ ipAddress }) => aliases[ipAddress] || ipAddress
+          ({ ipAddress }) =>
+            aliases[ipAddress] || ipAddress.replace("::ffff:", "")
         ),
         color: "yellow"
       }),
