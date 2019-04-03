@@ -21,6 +21,17 @@ const {
   getForecast
 } = require("./lib");
 
+const FixedWidthColumn = ({ rows, color }) =>
+  h(
+    Box,
+    {
+      flexDirection: "column",
+      width: _.max(rows.map(row => row.length)),
+      marginRight: 1
+    },
+    rows.map(row => (color ? h(Color, { [color]: true }, row) : row))
+  );
+
 class MessageBoard extends React.Component {
   constructor() {
     super();
@@ -72,18 +83,23 @@ class MessageBoard extends React.Component {
 
   render() {
     const { messages, aliases } = this.state;
+    const messagesToDisplay = messages.slice(-(this.props.rows - 1));
 
-    return h(
-      Box,
-      { flexDirection: "column" },
-      messages
-        .slice(-50)
-        .map(
-          ({ receivedAt, ipAddress, text }) =>
-            `${receivedAt.format("llll")} ${aliases[ipAddress] ||
-              ipAddress} ${text}`
-        )
-    );
+    return h(Box, { flexDirection: "row" }, [
+      h(FixedWidthColumn, {
+        rows: messagesToDisplay.map(({ receivedAt }) =>
+          receivedAt.format("llll")
+        ),
+        color: "blueBright"
+      }),
+      h(FixedWidthColumn, {
+        rows: messagesToDisplay.map(
+          ({ ipAddress }) => aliases[ipAddress] || ipAddress
+        ),
+        color: "yellow"
+      }),
+      h(FixedWidthColumn, { rows: messagesToDisplay.map(({ text }) => text) })
+    ]);
   }
 }
 
@@ -357,7 +373,7 @@ const App = ({ width, height }) =>
         h(Weather),
         h(Forecast)
       ]),
-      h(MessageBoard)
+      h(MessageBoard, { rows: height - 1 })
     ]
   );
 
