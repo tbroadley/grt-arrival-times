@@ -1,3 +1,4 @@
+const express = require("express");
 const { Box, Color } = require("ink");
 const _ = require("lodash");
 const moment = require("moment");
@@ -19,6 +20,52 @@ const {
   getCurrentWeather,
   getForecast
 } = require("./lib");
+
+class MessageBoard extends React.Component {
+  constructor() {
+    super();
+    this.state = { messages: [] };
+  }
+
+  componentDidMount() {
+    const app = express();
+    app.use(express.json());
+    const port = 3000;
+
+    app.post("/send-message", (req, res) => {
+      this.setState(
+        ({ messages }) => ({
+          messages: messages.concat([
+            {
+              receivedAt: getTime(),
+              ipAddress: req.ip,
+              text: req.body.message
+            }
+          ])
+        }),
+        () => res.end()
+      );
+    });
+
+    app.listen(port);
+  }
+
+  render() {
+    const { messages } = this.state;
+    console.error(messages);
+
+    return h(
+      Box,
+      { flexDirection: "column" },
+      messages
+        .slice(-50)
+        .map(
+          ({ receivedAt, ipAddress, text }) =>
+            `${receivedAt.format("llll")} ${ipAddress} ${text}`
+        )
+    );
+  }
+}
 
 class Clock extends React.Component {
   constructor() {
@@ -277,9 +324,17 @@ const App = ({ width, height }) =>
     {
       width,
       height: height - 1,
-      flexDirection: "column"
+      flexDirection: "row"
     },
-    [h(Clock), h(GRT), h(Weather), h(Forecast)]
+    [
+      h(Box, { flexDirection: "column", marginRight: 1 }, [
+        h(Clock),
+        h(GRT),
+        h(Weather),
+        h(Forecast)
+      ]),
+      h(MessageBoard)
+    ]
   );
 
 module.exports = {
