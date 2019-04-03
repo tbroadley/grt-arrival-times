@@ -276,8 +276,12 @@ class GRT extends React.Component {
       return h(Box, { marginBottom: 1 }, "Loading GRT data...");
     }
 
-    function departureToColumnWidth({ routeDescription }) {
-      return 3 + 1 + routeDescription.length + 1 + 7;
+    function departureToColumnWidth(departure) {
+      if (departure && departure.routeDescription) {
+        return 3 + 1 + departure.routeDescription.length + 1 + 7;
+      } else {
+        return 0;
+      }
     }
 
     const columnWidth = departureToColumnWidth(
