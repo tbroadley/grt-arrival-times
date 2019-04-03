@@ -52,7 +52,6 @@ class MessageBoard extends React.Component {
 
   render() {
     const { messages } = this.state;
-    console.error(messages);
 
     return h(
       Box,
