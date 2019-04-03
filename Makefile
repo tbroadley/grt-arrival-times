@@ -6,6 +6,7 @@ SNAP_FILE=${PROJECT}_${VERSION}_${TARGET_ARCH}.snap
 
 REMOTE_USER=tbroadley
 REMOTE_IP=192.168.0.53
+REMOTE_PORT=3000
 REMOTE_LOGIN=${REMOTE_USER}@${REMOTE_IP}
 
 SNAP_INSTALL_FLAGS=--devmode --dangerous
@@ -28,3 +29,6 @@ ssh:
 
 clean:
 	rm ${SNAP_FILE}
+
+send:
+	curl http://${REMOTE_IP}:${REMOTE_PORT}/send-message -X POST -H "Content-Type: application/json" --data "{ \"message\": \"$(subst ",\\\",$(msg))\" }"

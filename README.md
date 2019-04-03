@@ -25,3 +25,4 @@ make
 - `make clean` removes the snap file from the development machine.
 - `make` runs the above four targets in sequence.
 - `make ssh` opens an SSH connection to the Raspberry Pi.
+- `make send msg="Your message"` sends a message to be displayed on the message board.
