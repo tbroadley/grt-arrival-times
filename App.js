@@ -1,3 +1,4 @@
+const cors = require("cors");
 const express = require("express");
 const { Box, Color } = require("ink");
 const _ = require("lodash");
@@ -40,7 +41,9 @@ class MessageBoard extends React.Component {
 
   componentDidMount() {
     const app = express();
+    app.use(cors());
     app.use(express.json());
+
     const port = 3000;
 
     app.post("/send-message", (req, res) => {

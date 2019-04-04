@@ -1,0 +1,69 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <section>
+      <p>
+        Make sure you're connected to "390 Albert", not "390 Albert-5G".
+      </p>
+      <h1>Set alias</h1>
+      <p>
+        <input id="alias" type="text" placeholder="Alias" />
+        <button id="set_alias">Set</button>
+        <span id="set_alias_status"></span>
+      </p>
+    </section>
+    <section>
+      <h1>Send message</h1>
+      <p>
+        <input id="message" type="text" placeholder="Message" />
+        <button id="send_message">Send</button>
+        <span id="send_message_status"></span>
+      </p>
+    </section>
+    <script>
+      function sendMessage(message) {
+        return fetch("http://192.168.0.53:3000/send-message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: message
+          })
+        }).then(response => {
+          if (!response.ok) {
+            throw new Error(response.status);
+          }
+        });
+      }
+
+      var d = document.getElementById.bind(document);
+
+      d("set_alias").addEventListener("click", () => {
+        sendMessage("/alias " + d("alias").value)
+          .then(() => {
+            d("alias").value = "";
+            d("set_alias_status").innerText = "Alias set";
+          })
+          .catch(e => {
+            d("alias").value = "";
+            d("set_alias_status").innerText = "Error: " + e.message;
+          });
+      });
+
+      d("send_message").addEventListener("click", () => {
+        sendMessage(d("message").value)
+          .then(() => {
+            d("message").value = "";
+            d("send_message_status").innerText = "Message sent";
+          })
+          .catch(e => {
+            d("message").value = "";
+            d("send_message_status").innerText = "Error: " + e.message;
+          });
+      });
+    </script>
+  </body>
+</html>
