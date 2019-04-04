@@ -65,7 +65,8 @@ function parseDepartureTime(departureTime) {
 }
 
 function processData(
-  { routes, stops, trips, calendarDates, stopTimes, stopTimeUpdates },
+  { routes, stops, trips, calendarDates, stopTimes },
+  { stopTimeUpdates },
   timeHorizon
 ) {
   return STOPS.map(stopPair => {
@@ -130,21 +131,17 @@ function processData(
   });
 }
 
-function updateDepartureTimes(timeHorizon, cb) {
+function updateStaticGRTData(cb) {
   const routes = [];
   const stops = [];
   const trips = [];
   const stopTimes = [];
   const calendarDates = [];
-  const stopTimeUpdates = [];
-
-  let entityCount = 0;
 
   request
     .get("https://www.regionofwaterloo.ca/opendatadownloads/GRT_GTFS.zip")
     .pipe(gtfs())
     .on("data", entity => {
-      entityCount += 1;
       switch (entity.type) {
         case "route":
           routes.push(entity.data);
@@ -162,28 +159,26 @@ function updateDepartureTimes(timeHorizon, cb) {
       }
     })
     .on("close", () => {
-      request
-        .get("http://192.237.29.212:8080/gtfsrealtime/TripUpdates")
-        .pipe(gtfs.rt())
-        .on("data", entity => {
-          stopTimeUpdates.push(entity);
-        })
-        .on("finish", () =>
-          cb(
-            processData(
-              {
-                routes,
-                stops,
-                trips,
-                calendarDates,
-                stopTimes,
-                stopTimeUpdates
-              },
-              timeHorizon
-            )
-          )
-        );
+      cb({
+        routes,
+        stops,
+        trips,
+        calendarDates,
+        stopTimes
+      });
     });
+}
+
+function updateRealtimeGRTData(cb) {
+  const stopTimeUpdates = [];
+
+  request
+    .get("http://192.237.29.212:8080/gtfsrealtime/TripUpdates")
+    .pipe(gtfs.rt())
+    .on("data", entity => {
+      stopTimeUpdates.push(entity);
+    })
+    .on("finish", () => cb({ stopTimeUpdates }));
 }
 
 function weatherObjectToString({ dt, weather, main }) {
@@ -227,7 +222,9 @@ module.exports = {
   getTime,
   getStartOfDay,
   parseDepartureTime,
-  updateDepartureTimes,
+  updateStaticGRTData,
+  updateRealtimeGRTData,
+  processData,
   weatherObjectToString,
   getCurrentWeather,
   getForecast

@@ -16,7 +16,9 @@ const {
   getTime,
   getStartOfDay,
   parseDepartureTime,
-  updateDepartureTimes,
+  updateStaticGRTData,
+  updateRealtimeGRTData,
+  processData,
   weatherObjectToString,
   getCurrentWeather,
   getForecast
@@ -279,42 +281,43 @@ class GRT extends React.Component {
   constructor() {
     super();
     this.state = {};
-    this.updating = false;
   }
 
   componentDidMount() {
-    const update = () => {
-      if (this.updating) {
-        return;
-      }
-
-      const start = getTime();
-      this.updating = true;
-
-      updateDepartureTimes(TIME_HORIZON, data => {
-        this.setState({ data });
-        this.updating = false;
-        if (process.env.GRT_TTY) {
-          console.error(
-            `Took ${getTime().diff(start, "seconds")} seconds to update`
-          );
-        }
+    const updateStatic = () => {
+      updateStaticGRTData(staticData => {
+        this.setState({ staticData });
       });
     };
 
-    update();
-    this.interval = setInterval(update, REFRESH_PERIOD * 60 * 1000);
+    const updateRealtime = () => {
+      updateRealtimeGRTData(realtimeData => {
+        this.setState({ realtimeData });
+      });
+    };
+
+    updateStatic();
+    updateRealtime();
+
+    this.staticInterval = setInterval(updateStatic, 60 * 60 * 1000);
+    this.realtimeInterval = setInterval(
+      updateRealtime,
+      REFRESH_PERIOD * 60 * 1000
+    );
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
+    clearInterval(this.staticInterval);
+    clearInterval(this.realtimeInterval);
   }
 
   render() {
-    const { data } = this.state;
-    if (!data) {
+    const { staticData, realtimeData } = this.state;
+    if (!staticData || !realtimeData) {
       return h(Box, { marginBottom: 1 }, "Loading GRT data...");
     }
+
+    const data = processData(staticData, realtimeData, TIME_HORIZON);
 
     function departureToColumnWidth(departure) {
       if (departure && departure.routeDescription) {
